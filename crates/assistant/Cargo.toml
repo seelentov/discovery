@@ -1,0 +1,20 @@
+[package]
+name = "discovery-assistant"
+version = "0.1.0"
+edition = "2021"
+description = "AssistantStore trait + a sea-orm-backed implementation (Postgres/MySQL/SQLite) for the AI assistant feature's conversation/message history — Conversation/Message, scoped per owning user. Mirrors discovery-journal's crate shape (a growing, append-heavy log, not a small rule-config table, hence its own crate rather than a discovery-config-store module)."
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-entities = { path = "../entities" }
+discovery-migration = { path = "../migration" }
+async-trait = "0.1"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde"] }
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+uuid = { version = "1", features = ["serde", "v4"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

@@ -1,0 +1,17 @@
+[package]
+name = "discovery-ping"
+version = "0.1.0"
+edition = "2021"
+description = "Pinger trait + a FakePinger for tests, plus IcmpPinger — a real, unprivileged ICMP client (surge-ping). Mirrors discovery-snmp's SnmpClient/FakeSnmpClient/CsnmpClient split."
+
+[dependencies]
+discovery-core = { path = "../core" }
+async-trait = "0.1"
+anyhow = "1"
+tokio = { version = "1", features = ["net", "time", "rt"] }
+surge-ping = "0.9"
+rand = "0.8"
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

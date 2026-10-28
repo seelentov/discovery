@@ -1,0 +1,24 @@
+[package]
+name = "discovery-migration"
+version = "0.1.0"
+edition = "2021"
+description = "sea-orm-migration: one backend-agnostic migration history for all 15 tables, replacing migrations/*.sql + migrations_sqlite/*.sql (direct user request 2026-08-18, see discovery/README.md's \"Мульти-БД поддержка\")."
+
+[dependencies]
+sea-orm-migration = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite"] }
+# Needed directly (not just via sea-orm-migration's re-export) for `connect_in_memory_for_tests`,
+# the shared test-fixture helper every sea-orm store crate's own tests use.
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+# Only for the `devices.ip_sort_key` backfill in `m20260818_000001_initial_schema` (added
+# 2026-08-21) — a typed sea-orm entity query on an already-existing installation's
+# pre-existing rows, not a new schema-defining dependency (this crate still defines the
+# schema itself via sea-query DDL, same as always). No cycle: `discovery-entities` has no
+# dependency back on this crate.
+discovery-entities = { path = "../entities" }
+discovery-core = { path = "../core" }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+serde_json = "1"

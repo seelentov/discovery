@@ -1,0 +1,36 @@
+# Single-container deployment: SQLite storage (see deploy/config.example.toml), no
+# separate database service needed for the typical small/medium ISP fleet this project
+# targets. See QUICKSTART.md for the full walkthrough.
+services:
+  discovery-agent:
+    build: .
+    image: discovery-agent:local
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+      # SNMP Trap ingestion -- disabled by default (config.toml's [snmp_trap].enabled).
+      # Uncomment if you turn it on:
+      # - "1162:1162/udp"
+      # Syslog ingestion -- disabled by default (config.toml's [syslog].enabled). Check
+      # the bind port you configure and uncomment/adjust:
+      # - "<port>:<port>/udp"
+    environment:
+      # Required for SNMPv3 / SSH credentials / notification-provider secrets to be
+      # storable at all -- without it, those specific features fail loudly (not silently)
+      # the moment you try to use them. Generate one with: openssl rand -base64 32
+      # (must be base64, not hex -- see docs/Changelog 2026-09-12)
+      DISCOVERY_SECRET_KEY: ${DISCOVERY_SECRET_KEY:?set DISCOVERY_SECRET_KEY in .env -- copy .env.example to .env and fill it in}
+      # Required only for the first start with an empty data volume. The application
+      # rejects a missing value while provisioning the first administrator; leaving
+      # it unset is valid after the administrator already exists.
+      DISCOVERY_BOOTSTRAP_ADMIN_PASSWORD: ${DISCOVERY_BOOTSTRAP_ADMIN_PASSWORD-}
+    volumes:
+      - discovery-data:/data
+    # SNMP polling (outbound UDP) generally works fine on the default bridge network below.
+    # If reachability/SNMP checks can't see your devices, the most common fix is host
+    # networking -- uncomment the next line and remove the `ports:` list above (host mode
+    # ignores Compose port mappings):
+    # network_mode: host
+
+volumes:
+  discovery-data:

@@ -1,0 +1,21 @@
+[package]
+name = "discovery-topology"
+version = "0.1.0"
+edition = "2021"
+description = "TopologyStore: per-device topology keys/claims (discovery_config_store::TopologyRule's derived data) + fleet-wide resolution into neighbor/edge pairs. See discovery_config_store::topology_rule for the rule config side of this feature."
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-entities = { path = "../entities" }
+discovery-migration = { path = "../migration" }
+async-trait = "0.1"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1", features = ["sync"] }
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+sea-orm-migration = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite"] }
+uuid = { version = "1", features = ["serde"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

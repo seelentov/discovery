@@ -1,0 +1,27 @@
+[package]
+name = "discovery-config-store"
+version = "0.1.0"
+edition = "2021"
+description = "ProfileStore, DedupConfigStore, DiscoveryConfigStore: in-memory (default/demo) and Postgres/SQLite-backed (production, source of truth, dashboard-editable) storage for pipeline configuration. No file-backed (TOML) storage — everything is written directly (dashboard/API or a direct INSERT)."
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-dsl = { path = "../dsl" }
+discovery-queue = { path = "../queue" }
+discovery-entities = { path = "../entities" }
+discovery-migration = { path = "../migration" }
+tracing = "0.1"
+async-trait = "0.1"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["serde"] }
+tokio = { version = "1", features = ["sync", "rt"] }
+sqlx = { version = "0.8.1", features = ["runtime-tokio", "postgres", "sqlite", "json"] }
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+sea-orm-migration = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+base64 = "0.22"

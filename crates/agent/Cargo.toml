@@ -1,0 +1,163 @@
+[package]
+name = "discovery-agent"
+version = "1.2.0"
+edition = "2021"
+# Customer-facing (2026-09-12, see `src/lib.rs`'s module doc for why): `cargo-deb` uses
+# this field verbatim as the .deb package's `Description` summary line, with no separate
+# override field available in this version -- the previous engineering-facing text ("Ties
+# every crate together...") now lives in `src/lib.rs`'s own doc comment instead, where
+# it's actually read by the audience it's for.
+description = "Network device monitoring for regional ISPs"
+license = "Apache-2.0"
+
+# .deb/.rpm packaging (2026-09-12) -- additive alongside the Dockerfile/docker-compose.yml
+# path at the repo root, not a replacement. See deploy/linux-packages/ for the shared
+# config/systemd-unit/maintainer-scripts both sections below reference, and
+# docs/Architecture/Deployment.md for the full design + what was live-verified.
+#
+# Built via `cargo deb -p discovery-agent` from the *workspace root* (needs the workspace
+# manifest in scope to resolve this crate's path dependencies) -- but `cargo generate-rpm`
+# does NOT follow the same rule, see that section's own comment below: it must be invoked
+# from inside this crate's own directory instead. Found the hard way by live-verification
+# (2026-09-12) after first assuming both tools worked identically -- they don't.
+#
+# Asset paths below are `../../`-relative to *this crate's own directory*
+# (`crates/agent/`), not the workspace root or the invocation directory -- found by
+# live-verification, 2026-09-12: `cargo deb` resolves relative asset paths against the
+# manifest they're declared in, regardless of where `cargo deb` is actually invoked from.
+# A first version of this section used workspace-root-relative paths (`deploy/...`,
+# `QUICKSTART.md`) on the (reasonable-looking but wrong) assumption that running from the
+# workspace root would make paths resolve from there -- `cargo deb` failed immediately
+# with "Static file asset path did not match any existing files", resolving against
+# `crates/agent/deploy/...` instead.
+
+[package.metadata.deb]
+name = "discovery-agent"
+maintainer = "discovery"
+copyright = "2026, discovery"
+# license-file (the dedicated cargo-deb field, which also drives the package's Debian
+# `copyright` file) intentionally NOT set -- its exact tuple syntax/behavior wasn't
+# verified against this cargo-deb version. LICENSE is shipped instead as a plain doc asset
+# below (same proven pattern as QUICKSTART.md).
+#
+# No separate `description` field here -- this version of `cargo-deb` doesn't support one
+# (confirmed by a real "unknown field `description`" TOML-schema error during live
+# verification, 2026-09-12); the `Description` summary line always comes straight from
+# `[package].description` above, which is why that field was changed to be
+# customer-facing rather than left as this crate's own internal engineering description.
+extended-description = """\
+Network device monitoring for regional ISPs: SNMP discovery/polling, alerting, \
+notifications, and a web dashboard. See QUICKSTART.md in the source distribution, or \
+/usr/share/doc/discovery-agent/ once installed."""
+section = "net"
+priority = "optional"
+# "$auto" would run `ldd` itself and likely resolve to the same three (libgcc_s/libm/libc)
+# confirmed by this package's own live-verification pass -- pinned explicitly instead so a
+# future accidental new dynamic-linking dependency (e.g. a switch away from a vendored/
+# statically-linked TLS backend) is loud (a build failure needing this list updated) rather
+# than silently picked up.
+depends = "libc6, libgcc-s1"
+assets = [
+    ["target/release/discovery-agent", "usr/bin/", "755"],
+    ["../../deploy/linux-packages/config.toml", "etc/discovery-agent/config.toml", "644"],
+    ["../../deploy/linux-packages/discovery-agent.service", "lib/systemd/system/discovery-agent.service", "644"],
+    ["../../QUICKSTART.md", "usr/share/doc/discovery-agent/QUICKSTART.md", "644"],
+    ["../../LICENSE", "usr/share/doc/discovery-agent/LICENSE", "644"],
+]
+conf-files = ["/etc/discovery-agent/config.toml"]
+maintainer-scripts = "../../deploy/linux-packages/debian"
+# Deliberately NOT using cargo-deb's built-in `systemd-units` dh_installsystemd
+# integration -- our own postinst (daemon-reload + enable --now) already does this
+# explicitly and is fully understood/live-verified; layering an unverified second
+# mechanism on top risked a double-invocation this pass didn't have time to rule out.
+
+[package.metadata.generate-rpm]
+name = "discovery-agent"
+license = "Apache-2.0"
+summary = "Network device monitoring for regional ISPs"
+# Same `../../`-relative-to-this-crate's-directory rule as `[package.metadata.deb]`'s
+# assets above (see that section's comment) -- `cargo generate-rpm` also has no
+# `--manifest-path`/workspace-package-resolution the way `cargo deb -p <name>` does; it
+# must be invoked from *this crate's own directory* (`cd crates/agent && cargo
+# generate-rpm`), confirmed by live-verification, 2026-09-12 -- `-p discovery-agent` from
+# the workspace root looks for a literal `./discovery-agent/Cargo.toml` relative to cwd
+# and fails, since this crate's directory is `crates/agent/`, not `discovery-agent/`.
+assets = [
+    { source = "target/release/discovery-agent", dest = "/usr/bin/discovery-agent", mode = "755" },
+    { source = "../../deploy/linux-packages/config.toml", dest = "/etc/discovery-agent/config.toml", mode = "644", config = "noreplace" },
+    { source = "../../deploy/linux-packages/discovery-agent.service", dest = "/usr/lib/systemd/system/discovery-agent.service", mode = "644" },
+    { source = "../../QUICKSTART.md", dest = "/usr/share/doc/discovery-agent/QUICKSTART.md", mode = "644", doc = true },
+    { source = "../../LICENSE", dest = "/usr/share/doc/discovery-agent/LICENSE", mode = "644", doc = true },
+]
+post_install_script = "../../deploy/linux-packages/rpm/post_install.sh"
+pre_uninstall_script = "../../deploy/linux-packages/rpm/pre_uninstall.sh"
+
+[lib]
+name = "discovery_agent"
+path = "src/lib.rs"
+
+[[bin]]
+name = "discovery-agent"
+path = "src/main.rs"
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-dsl = { path = "../dsl" }
+discovery-snmp = { path = "../snmp" }
+discovery-ping = { path = "../ping" }
+discovery-ssh = { path = "../ssh" }
+discovery-servicecheck = { path = "../servicecheck" }
+discovery-notify = { path = "../notify" }
+discovery-queue = { path = "../queue" }
+discovery-devices = { path = "../devices" }
+discovery-config-store = { path = "../config-store" }
+discovery-alerts = { path = "../alerts" }
+discovery-topology = { path = "../topology" }
+discovery-web = { path = "../web" }
+discovery-logging = { path = "../logging" }
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+uuid = { version = "1", features = ["v4"] }
+dashmap = "5"
+discovery-bootstrap = { path = "../bootstrap" }
+discovery-db = { path = "../db" }
+discovery-auth = { path = "../auth" }
+discovery-journal = { path = "../journal" }
+discovery-assistant = { path = "../assistant" }
+rand = "0.8"
+# Syslog ingestion — SyslogEventSpec::pattern matching against message bodies.
+regex = "1"
+
+[dev-dependencies]
+serde_json = "1"
+discovery-migration = { path = "../migration" }
+# `test-util` unlocks `tokio::time::pause`/`advance` for deterministic debounce tests
+# (`MetricPollHandler`'s reidentify feature) — Cargo unifies this with the main `tokio`
+# dependency's "full" for test builds only, the release binary is unaffected.
+tokio = { version = "1", features = ["test-util"] }
+# `live_derived_metrics.rs`'s only extra dependency — talks to a real, separately-running
+# `discovery-devicefarm` control API (`--ignored`, see that file's docs) to create a
+# virtual counter device and bump its value between poll ticks. `discovery-devicefarm`
+# itself is bin-only (no library target — deliberately zero path-dependencies on any
+# discovery-* crate, see its own Cargo.toml docstring), so talking to it over its HTTP API
+# is the only integration point available, same as every other devicefarm-based live test
+# in this project (`discovery-snmp`'s `live_get_multi_...`/`live_v3_auth_priv_...`).
+# `default-features = false` + `rustls-tls` — same choice `discovery-notify`/
+# `discovery-llm`/`discovery-servicecheck` already made ("no system TLS library"
+# reasoning), and *not just stylistic* here: Cargo unifies a shared dependency's features
+# across every workspace member selected in one build invocation, so leaving this crate on
+# reqwest's default `default-tls` (native-tls) backend pulled *both* backends into
+# `discovery-llm`'s otherwise rustls-only build under `cargo test --workspace` — found live
+# (2026-09-18) as `GigaChatProvider::new`'s `Certificate::from_pem`/`add_root_certificate`
+# failing with an opaque "builder error" only in workspace-wide runs, never in
+# `cargo test -p discovery-llm` alone. One consistent backend workspace-wide avoids this
+# entire class of accidental-dual-TLS-backend bug, not just this one instance of it.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }

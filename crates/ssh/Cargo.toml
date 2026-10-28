@@ -1,0 +1,19 @@
+[package]
+name = "discovery-ssh"
+version = "0.1.0"
+edition = "2021"
+description = "CliClient trait + a FakeCliClient for tests, and RealCliClient (russh-backed) for actual SSH CLI-pull metric polling. Mirrors discovery-snmp's SnmpClient/FakeSnmpClient split and discovery-ping's Pinger/FakePinger split."
+
+[dependencies]
+discovery-core = { path = "../core" }
+async-trait = "0.1"
+anyhow = "1"
+tokio = { version = "1", features = ["net", "time", "rt", "io-util"] }
+russh = "0.63"
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+# Only for generating an ephemeral Ed25519 host key for the in-process `russh::server`
+# test fixture in `client.rs` — never used by `RealCliClient`/`FakeCliClient` themselves.
+rand = "0.10"

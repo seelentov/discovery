@@ -1,0 +1,29 @@
+[package]
+name = "discovery-bootstrap"
+version = "0.1.0"
+edition = "2021"
+description = "The handful of settings that genuinely can never live in the database (storage backend selection, server port, logging, worker concurrency) — config.toml, read once at startup. poll_intervals moved out 2026-08-16 (now DB-backed, see discovery_core::PollIntervalsConfig / discovery_config_store::SettingsStore) — this crate's [poll_intervals] section is only a first-run seed default now."
+
+[dependencies]
+discovery-core = { path = "../core" }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+# Format-preserving TOML editing (comments/formatting/key order of everything *outside*
+# the edited table survive) — needed for `Config::write_storage`, since `config.toml` is a
+# hand-maintained reference document (see its own header) that `PUT /api/settings/databases`/
+# `PUT /api/settings/routing` must not blow away just to update the `[storage]` table.
+# Already an indirect dependency via `toml` itself, just not previously named directly.
+toml_edit = { version = "0.22", features = ["serde"] }
+# Builds postgres/mysql connection strings from structured host/port/database/username/
+# password fields (`DatabaseConnConfig::connection_url`) — its own setters correctly
+# percent-encode a password/database name containing `@`/`:`/`/`/`#`/etc, which naive
+# string concatenation would silently corrupt.
+url = "2"
+anyhow = "1"
+# CIDR/host parsing for `SyslogConfig`/`SnmpTrapConfig::allowed_sources` (SEC-19, ingress
+# ACL) — already resolved transitively via `hyper-util`, just not previously a direct
+# dependency of this crate. Kept private to this crate — [`AllowedSources`] wraps it so
+# callers (`discovery-agent`) never need `ipnet` as a dependency of their own.
+ipnet = "2"
+
+[dev-dependencies]

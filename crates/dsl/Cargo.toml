@@ -1,0 +1,28 @@
+[package]
+name = "discovery-dsl"
+version = "0.1.0"
+edition = "2021"
+description = "Profile definitions (TOML) + a restricted Rhai expression surface for profile matching and alert conditions. Deliberately not a general-purpose scripting layer — only the two hooks the pipeline actually needs."
+
+[dependencies]
+discovery-core = { path = "../core" }
+rhai = { version = "1", features = ["sync"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+# `derive_metric::compute_derived`'s `polled_at` timestamps (was dev-only before, for
+# `Schedule::Calendar` test fixtures — see below).
+chrono = { version = "0.4", features = ["serde"] }
+# Only for SyslogSection::validate()'s compile-check of profile-authored patterns — actual
+# per-message matching happens in discovery-agent, not here.
+regex = "1"
+# Only the "sync" feature (RwLock) — ProfileMatcher's hot-reload lock doesn't need a
+# runtime here, callers already have one.
+tokio = { version = "1", features = ["sync"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }
+# Only for `group_alerts` module tests, which construct `discovery_core::Alert` fixtures
+# directly — no production code in this crate touches `Uuid` (`GroupAlertEvaluator` takes
+# raw `&str` expressions, not an `Alert`'s id, in every non-test code path).
+uuid = { version = "1", features = ["v4"] }

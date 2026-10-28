@@ -1,0 +1,17 @@
+#!/bin/sh
+# Package removal (`apt remove`) deliberately does NOT delete the customer's monitoring
+# data or secret key -- only a full purge (`apt purge`/`dpkg --purge`) does, matching
+# standard Debian convention (e.g. postgresql, mysql-server behave the same way). A plain
+# uninstall should be reversible by reinstalling, not a silent data-loss event.
+set -e
+
+if [ "$1" = "purge" ]; then
+    rm -rf /var/lib/discovery-agent
+    rm -f /etc/discovery-agent/discovery.env
+    if getent passwd discovery >/dev/null; then
+        deluser --system discovery || true
+    fi
+    systemctl daemon-reload || true
+fi
+
+exit 0

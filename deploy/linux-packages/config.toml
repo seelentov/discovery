@@ -1,0 +1,35 @@
+# Config shipped inside the .deb/.rpm packages -- same content as ../config.example.toml
+# (Docker's variant), except paths are FHS-compliant (/var/lib/discovery-agent) instead of
+# the Docker-volume-specific /data. See QUICKSTART.md "Вариант 3" for the full walkthrough.
+#
+# This file is installed as a package conffile at /etc/discovery-agent/config.toml -- dpkg
+# preserves local edits across upgrades (won't silently overwrite your changes), and the rpm
+# package marks it `%config(noreplace)` for the same reason.
+
+[storage]
+default_database = "main"
+
+[[storage.databases]]
+name = "main"
+kind = "sqlite"
+file_path = "/var/lib/discovery-agent/discovery.sqlite3"
+
+[server]
+# 0.0.0.0 so the dashboard is reachable from outside the host, not just localhost. Put this
+# behind a firewall/VPN regardless -- login is rate-limited but there
+# is no TLS configured anywhere in this file (see docs/Home.md -> "Deployment").
+addr = "0.0.0.0:8088"
+enable_rest = true
+enable_webui = true
+
+[logging]
+level = "info"
+# Empty = log to stdout only, captured by systemd's journal (`journalctl -u discovery-agent`).
+file = ""
+buffer_size = 1000
+
+[snmp_trap]
+enabled = false
+
+[syslog]
+enabled = false

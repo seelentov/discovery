@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/bootstrap",
+    "crates/core",
+    "crates/dsl",
+    "crates/snmp",
+    "crates/ping",
+    "crates/ssh",
+    "crates/servicecheck",
+    "crates/notify",
+    "crates/queue",
+    "crates/devices",
+    "crates/config-store",
+    "crates/logging",
+    "crates/web",
+    "crates/agent",
+    "crates/alerts",
+    "crates/entities",
+    "crates/migration",
+    "crates/db",
+    "crates/auth",
+    "crates/journal",
+    "crates/topology",
+    "crates/llm",
+    "crates/assistant",
+]
+
+[profile.dev]
+debug = "line-tables-only"
+incremental = false
+
+[profile.test]
+debug = "line-tables-only"
+incremental = false

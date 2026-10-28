@@ -1,0 +1,23 @@
+[package]
+name = "discovery-llm"
+version = "0.1.0"
+edition = "2021"
+description = "LlmProvider trait + a FakeLlmProvider for tests, plus GigaChatProvider (OAuth client-credentials + function-calling chat completions) for the AI assistant feature. Mirrors discovery-notify's Notifier/FakeNotifier/RealNotifier split; depends only on discovery-core, same as that crate."
+
+[dependencies]
+discovery-core = { path = "../core" }
+async-trait = "0.1"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+# Same rustls-only choice as discovery-notify's own reqwest dependency — no system TLS
+# library dependency.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+base64 = "0.22"
+uuid = { version = "1", features = ["v4"] }
+tokio = { version = "1", features = ["sync", "time"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

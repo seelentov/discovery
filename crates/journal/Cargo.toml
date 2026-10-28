@@ -1,0 +1,21 @@
+[package]
+name = "discovery-journal"
+version = "0.1.0"
+edition = "2021"
+description = "The 'Журнал' audit trail: JournalStore trait + a sea-orm-backed implementation (Postgres/MySQL/SQLite). Records who did what, in which functional area, when — written by discovery-web's auth middleware after every successful mutating request; read via the paginated/filterable/sortable /api/journal endpoint."
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-entities = { path = "../entities" }
+discovery-migration = { path = "../migration" }
+async-trait = "0.1"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde"] }
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+sea-orm-migration = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite"] }
+uuid = { version = "1", features = ["serde", "v4"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

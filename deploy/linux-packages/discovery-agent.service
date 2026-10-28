@@ -1,0 +1,33 @@
+# systemd unit shipped inside the .deb/.rpm packages -- FHS paths (/usr/bin, /etc, /var/lib),
+# unlike ../systemd/discovery-agent.service which uses /opt/discovery for the manual
+# (no-package-manager) bare-metal install walkthrough in QUICKSTART.md "Вариант 2". Both
+# units make the same ICMP-reachability tradeoff -- see that file's own comments for why
+# ProtectKernelTunables doesn't affect ping access.
+#
+# Installed by the package at /lib/systemd/system/discovery-agent.service (.deb) or
+# /usr/lib/systemd/system/discovery-agent.service (.rpm) -- do not edit in place, changes
+# will be overwritten on upgrade; use a drop-in (systemctl edit discovery-agent) instead.
+
+[Unit]
+Description=discovery-agent -- network device monitoring
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=discovery
+Group=discovery
+WorkingDirectory=/var/lib/discovery-agent
+Environment=CONFIG_FILE=/etc/discovery-agent/config.toml
+EnvironmentFile=/etc/discovery-agent/discovery.env
+ExecStart=/usr/bin/discovery-agent
+Restart=on-failure
+RestartSec=5
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/discovery-agent
+ProtectKernelTunables=true
+
+[Install]
+WantedBy=multi-user.target

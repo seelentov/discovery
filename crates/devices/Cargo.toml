@@ -1,0 +1,28 @@
+[package]
+name = "discovery-devices"
+version = "0.1.0"
+edition = "2021"
+description = "DeviceStore trait + InMemory (tests/demo) and Postgres (production, crash-safe) implementations: device identity, dedup fingerprint index, matched profile, poll generation, latest metrics."
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-entities = { path = "../entities" }
+discovery-migration = { path = "../migration" }
+discovery-alerts = { path = "../alerts" }
+discovery-topology = { path = "../topology" }
+async-trait = "0.1"
+anyhow = "1"
+tokio = { version = "1", features = ["sync"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+serde_json = "1"
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+sea-orm-migration = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite"] }
+# The second `DeviceMetricsStore` backend (2026-08-18, third pass) — see
+# `CassandraDeviceMetricsStore`'s docs for why `device_metrics`/`device_metric_history`
+# specifically is a genuine structural fit for Cassandra's partition/cluster model.
+scylla = { version = "0.15", features = ["chrono-04"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+base64 = "0.22"

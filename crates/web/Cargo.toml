@@ -1,0 +1,66 @@
+[package]
+name = "discovery-web"
+version = "0.1.0"
+edition = "2021"
+description = "REST API + React dashboard (crates/web/frontend, Vite build embedded via rust-embed — see frontend/README.md for the required build order before `cargo build`)."
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-queue = { path = "../queue" }
+discovery-logging = { path = "../logging" }
+discovery-config-store = { path = "../config-store" }
+discovery-devices = { path = "../devices" }
+discovery-dsl = { path = "../dsl" }
+discovery-alerts = { path = "../alerts" }
+discovery-topology = { path = "../topology" }
+discovery-bootstrap = { path = "../bootstrap" }
+discovery-auth = { path = "../auth" }
+discovery-journal = { path = "../journal" }
+discovery-assistant = { path = "../assistant" }
+discovery-servicecheck = { path = "../servicecheck" }
+discovery-snmp = { path = "../snmp" }
+discovery-llm = { path = "../llm" }
+axum = "0.7"
+anyhow = "1"
+# AI assistant tool-call execution (2026-09-18) — runs each tool call as a synthetic
+# internal request through the real `axum::Router` in-process (`ServiceExt::oneshot`),
+# reusing the exact same permission/journal middleware a real HTTP request would
+# hit. Was previously dev-only (router-level tests only); promoted to a real dependency
+# now that production code (`crate::assistant::execute_tool_call`) needs it too.
+tower = { version = "0.5", features = ["util"] }
+# Login rate-limiter's (username, source-IP) -> TokenBucket map (2026-09-12) — same version
+# already used by discovery-core/discovery-agent for their own per-key in-memory maps.
+dashmap = "5"
+# Attachment bytes travel as base64 inside the same JSON body as the rest of this API
+# (2026-08-29, direct user request: "вложения к комментариям тревог") — no
+# multipart/form-data extractor needed for a feature this small.
+base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tracing = "0.1"
+uuid = { version = "1", features = ["serde"] }
+# Embeds crates/web/frontend/dist (the built React app) straight into the binary — same
+# "one artifact on disk" property the old include_str!'d single HTML file had, just now
+# requiring `npm run build` to have populated dist/ first (see frontend/README.md).
+rust-embed = "8"
+mime_guess = "2"
+# Webhook `target` SSRF validation (2026-09-17, CWE-918 fix) — parses the URL to check its
+# scheme/host without pulling in reqwest (this crate makes no outbound HTTP calls itself);
+# already present transitively (axum's dependency tree), promoted to a direct dependency
+# because `upsert_notification_channel_for` names it.
+url = "2"
+
+[dev-dependencies]
+# Router-level HTTP tests (added 2026-08-18, direct user request: "Тесты покрывают все
+# операции?" — they didn't, this crate had zero automated tests before this) — drives the
+# real `axum::Router` through `tower::ServiceExt::oneshot` against in-memory stores, no
+# real socket/DB. Already transitive deps of axum 0.7; declared directly here only because
+# test code needs to name them.
+http-body-util = "0.1"
+discovery-migration = { path = "../migration" }
+# `FailingStatsStore` (TASK-20260921-021's test) needs to implement `JobQueueStore`
+# ourselves — already a transitive dep via `discovery-queue`, declared directly only
+# because test code needs to name the macro.
+async-trait = "0.1"

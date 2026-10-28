@@ -1,0 +1,20 @@
+# Build artifacts -- never needed as build context, huge when present.
+target
+crates/*/target
+crates/web/frontend/node_modules
+crates/web/frontend/dist
+crates/web/frontend/e2e/node_modules
+crates/web/frontend/e2e/test-results
+crates/web/frontend/e2e/playwright-report
+
+.agents
+.idea
+.codex
+.zed
+
+# Local/dev-only, never belongs in an image.
+.git
+.env
+logs
+*.sqlite3
+config.toml

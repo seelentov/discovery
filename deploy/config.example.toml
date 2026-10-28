@@ -1,0 +1,49 @@
+# Example production config for a single-instance, small/medium-ISP deployment --
+# SQLite storage, no separate database service.
+#
+# Used as-is by ../Dockerfile (copied to /app/config.toml) and referenced directly via
+# CONFIG_FILE= for a bare-metal/systemd install (see systemd/discovery-agent.service).
+# See QUICKSTART.md for the full walkthrough of either path.
+#
+# This is a minimal starting point, not the full reference -- every section is optional
+# and falls back to discovery-bootstrap's built-in defaults (crates/bootstrap/src/*.rs)
+# when omitted. The project's own maximal dev-reference copy, with every field documented,
+# is the repo-root config.toml.
+
+[storage]
+default_database = "main"
+
+[[storage.databases]]
+name = "main"
+kind = "sqlite"
+# Docker: /data is the mounted volume declared in docker-compose.yml -- leave as-is.
+# Bare-metal/systemd: point this at a real directory instead, e.g.
+# /var/lib/discovery/discovery.sqlite3 (see systemd/discovery-agent.service's install steps).
+file_path = "/data/discovery.sqlite3"
+
+[server]
+# 0.0.0.0 so the dashboard is reachable from outside the container/host, not just from
+# localhost. Put this behind a firewall/VPN regardless -- login is
+# rate-limited (see docs/Home.md -> "Authentication и Permissions") but there is still no
+# TLS configured anywhere in this file (see docs/Home.md -> "Deployment", known gaps).
+addr = "0.0.0.0:8088"
+enable_rest = true
+enable_webui = true
+
+[logging]
+level = "info"
+# Empty = log to stdout only, captured by `docker logs` / systemd's journal, rather than
+# writing to a file inside the container's/service's own filesystem.
+file = ""
+buffer_size = 1000
+
+[snmp_trap]
+# Off by default -- flip to true and expose the matching UDP port (see
+# docker-compose.yml / the systemd unit's install notes) for push-based SNMP trap
+# ingestion alongside normal polling. See docs/Home.md -> "SNMP Trap Ingestion".
+enabled = false
+
+[syslog]
+# Same idea as [snmp_trap] above, for push-based syslog ingestion. See
+# docs/Home.md -> "Syslog Ingestion" for the full field list (bind_addr, rate limiting).
+enabled = false

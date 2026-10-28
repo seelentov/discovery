@@ -1,0 +1,16 @@
+[package]
+name = "discovery-snmp"
+version = "0.1.0"
+edition = "2021"
+description = "SnmpClient trait + a FakeSnmpClient for tests/demo, and RealSnmpClient (async-snmp-backed, v1/v2c/v3) for actual wire traffic."
+
+[dependencies]
+discovery-core = { path = "../core" }
+async-trait = "0.1"
+anyhow = "1"
+tokio = { version = "1", features = ["net", "time", "rt"] }
+async-snmp = "0.18"
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

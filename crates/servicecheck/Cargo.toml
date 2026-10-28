@@ -1,0 +1,19 @@
+[package]
+name = "discovery-servicecheck"
+version = "0.1.0"
+edition = "2021"
+description = "ServiceChecker trait + a FakeServiceChecker for tests, plus RealServiceChecker — TCP-connect / HTTP(S) status+body / SSH banner reachability probes. Third protocol collection sibling of discovery-ping (ICMP)/discovery-snmp, added 2026-09-07 for L4/L7 service checks."
+
+[dependencies]
+async-trait = "0.1"
+anyhow = "1"
+tokio = { version = "1", features = ["net", "time", "rt", "io-util"] }
+# HTTP(S) probing only — no other crate in this workspace does outbound HTTP yet, so this
+# is scoped to this crate alone rather than a workspace-wide dependency. `rustls-tls`
+# (not `native-tls`/openssl) keeps the build self-contained, same "no system TLS library
+# dependency" reasoning as `discovery-ping`'s unprivileged-socket `surge-ping` choice.
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

@@ -1,0 +1,51 @@
+# Example systemd unit for a bare-metal (non-Docker) install of discovery-agent.
+# See QUICKSTART.md for the full walkthrough; short version:
+#
+#   1. Build a release binary (needs a Rust toolchain + Node.js on the build machine):
+#        cd crates/web/frontend && npm ci && npm run build && cd ../../..
+#        cargo build --release -p discovery-agent
+#   2. sudo useradd --system --home-dir /opt/discovery --shell /usr/sbin/nologin discovery
+#   3. sudo mkdir -p /opt/discovery /var/lib/discovery
+#   4. sudo cp target/release/discovery-agent /opt/discovery/
+#   5. sudo cp deploy/config.example.toml /opt/discovery/config.toml
+#      then edit [[storage.databases]].file_path to /var/lib/discovery/discovery.sqlite3
+#   6. Create /opt/discovery/discovery.env with DISCOVERY_SECRET_KEY and a unique
+#      DISCOVERY_BOOTSTRAP_ADMIN_PASSWORD (at least 8 characters); keep mode 600.
+#   7. sudo chown -R discovery:discovery /opt/discovery /var/lib/discovery
+#   8. sudo cp deploy/systemd/discovery-agent.service /etc/systemd/system/
+#   9. sudo systemctl daemon-reload && sudo systemctl enable --now discovery-agent
+#
+# NOT YET LIVE-VERIFIED -- the Docker path was (2026-09-12, see docs/Changelog), but this
+# one still isn't: systemd doesn't exist on macOS at all, so this needs an actual Linux
+# host to confirm, not just different tooling on the same machine. Treat as a reasoned
+# starting point and confirm it actually starts cleanly before relying on it.
+
+[Unit]
+Description=discovery-agent -- network device monitoring
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=discovery
+Group=discovery
+WorkingDirectory=/opt/discovery
+Environment=CONFIG_FILE=/opt/discovery/config.toml
+EnvironmentFile=/opt/discovery/discovery.env
+ExecStart=/opt/discovery/discovery-agent
+Restart=on-failure
+RestartSec=5
+
+# Hardening -- loosen if it interferes with SNMP/ICMP on your distro. Note that ICMP
+# reachability uses an unprivileged SOCK_DGRAM+IPPROTO_ICMP socket, gated by the kernel's
+# net.ipv4.ping_group_range sysctl, not a capability -- ProtectKernelTunables below
+# blocks this *unit* from changing sysctls, it does not itself grant or deny ping access.
+# If reachability checks fail under this unit, check that sysctl on the host first (see
+# QUICKSTART.md's troubleshooting section) rather than assuming it's this hardening block.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/discovery
+ProtectKernelTunables=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,22 @@
+[package]
+name = "discovery-queue"
+version = "0.1.0"
+edition = "2021"
+description = "JobQueueStore trait + InMemory (tests/demo) and Postgres (production, crash-safe) implementations, plus a per-queue-kind worker pool with a hard concurrency limit."
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-entities = { path = "../entities" }
+discovery-migration = { path = "../migration" }
+async-trait = "0.1"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1", features = ["sync", "time", "macros", "rt-multi-thread"] }
+tracing = "0.1"
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+sea-orm-migration = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "test-util"] }

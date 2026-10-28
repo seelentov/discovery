@@ -1,0 +1,25 @@
+[package]
+name = "discovery-db"
+version = "0.1.0"
+edition = "2021"
+description = "ConnectionRegistry: resolves 8-domain routing against named DatabaseConnConfigs, dedupes to one physical sea-orm connection per used name, connects only what's actually referenced (direct user request 2026-08-18)."
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-bootstrap = { path = "../bootstrap" }
+discovery-migration = { path = "../migration" }
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+sea-orm-migration = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite"] }
+# The non-sea-orm `DomainConnection::ClickHouse` variant (2026-08-18) — sea-orm/sea-query
+# have no ClickHouse driver, this connects via ClickHouse's own HTTP interface instead.
+clickhouse = "0.13"
+# The non-sea-orm `DomainConnection::Cassandra` variant (2026-08-18, third pass) — CQL
+# client, wire-compatible with real Apache Cassandra (not Cassandra-specific despite the
+# crate name).
+scylla = { version = "0.15", features = ["chrono-04"] }
+anyhow = "1"
+tokio = { version = "1", features = ["sync"] }
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

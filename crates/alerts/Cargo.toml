@@ -1,0 +1,25 @@
+[package]
+name = "discovery-alerts"
+version = "0.1.0"
+edition = "2021"
+description = "Persisted alert (incident) history: AlertStore trait + Postgres/SQLite/Memory backends. Alert *decision* logic (activation/deactivation debounce) stays in discovery-core::AlertStateTracker — this crate is purely the durable record + paginated/filterable/sortable read path discovery-web's Тревоги page uses."
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-entities = { path = "../entities" }
+discovery-migration = { path = "../migration" }
+async-trait = "0.1"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1", features = ["sync"] }
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+sea-orm-migration = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite"] }
+uuid = { version = "1", features = ["serde"] }
+# The second `AlertStore` backend (2026-08-18, fourth pass) — see `CassandraAlertStore`'s
+# docs for why `alerts` (device_id partition, time-clustered) is a structural fit.
+scylla = { version = "0.15", features = ["chrono-04"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

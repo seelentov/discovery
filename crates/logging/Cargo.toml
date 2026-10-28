@@ -1,0 +1,26 @@
+[package]
+name = "discovery-logging"
+version = "0.1.0"
+edition = "2021"
+description = "A bounded in-memory ring buffer of recent log entries, fed by a tracing_subscriber::Layer, read by the dashboard's /api/logs. The durable log record is the file sink configured in discovery-agent — this is a live tail, not a log store."
+
+[dependencies]
+discovery-entities = { path = "../entities" }
+discovery-migration = { path = "../migration" }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+async-trait = "0.1"
+anyhow = "1"
+tokio = { version = "1", features = ["sync", "rt"] }
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+sea-orm-migration = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite"] }
+# The second `LogStore` backend (2026-08-18) — see `ClickHouseLogStore`'s docs for why
+# `logs` specifically (pure `append`, no update/delete) is the one domain that's a genuine
+# structural fit for ClickHouse.
+clickhouse = { version = "0.13", features = ["chrono"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

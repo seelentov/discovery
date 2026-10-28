@@ -1,0 +1,23 @@
+[package]
+name = "discovery-auth"
+version = "0.1.0"
+edition = "2021"
+description = "Local username/password authentication (session tokens) plus classic per-domain read/write permissions. External providers (LDAP/Kerberos/OAuth) deliberately out of scope for now — see discovery/CLAUDE.md's AggreGate auth survey."
+
+[dependencies]
+discovery-core = { path = "../core" }
+discovery-entities = { path = "../entities" }
+discovery-migration = { path = "../migration" }
+async-trait = "0.1"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+sea-orm = { version = "1", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "sqlx-mysql", "sqlx-sqlite", "macros"] }
+argon2 = "0.5"
+rand = "0.8"
+sha2 = "0.10"
+hex = "0.4"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
